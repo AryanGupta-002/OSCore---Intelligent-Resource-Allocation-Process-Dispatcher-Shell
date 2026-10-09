@@ -1,44 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>OSCore Job Submission</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCore - Job Management</title>
 </head>
 <body>
 
-<h2>Submit Job</h2>
+    <h1>OSCore Job Management</h1>
 
-<form method="POST">
+    <h2>Option 1: Enter Job Manually</h2>
 
-    Job Name:
-    <input type="text" name="job_name" required><br><br>
+    <form method="POST">
+        <input type="hidden" name="entry_type" value="manual">
 
-    Arrival Time:
-    <input type="number" name="arrival_time" required><br><br>
+        <label>Job Name:</label>
+        <input type="text" name="job_name" required><br><br>
 
-    Priority:
-    <input type="number" name="priority" required><br><br>
+        <label>Arrival Time:</label>
+        <input type="number" name="arrival_time" min="0" required><br><br>
 
-    CPU Time:
-    <input type="number" name="cpu_time" required><br><br>
+        <label>Priority:</label>
+        <input type="number" name="priority" min="0" required><br><br>
 
-    Memory Required:
-    <input type="number" name="memory_required" required><br><br>
+        <label>CPU Time:</label>
+        <input type="number" name="cpu_time" min="0" required><br><br>
 
-    Printer Required:
-    <input type="number" name="printer_required" value="0"><br><br>
+        <label>Memory Required:</label>
+        <input type="number" name="memory_required" min="0" required><br><br>
 
-    Scanner Required:
-    <input type="number" name="scanner_required" value="0"><br><br>
+        <label>Printer Required:</label>
+        <input type="number" name="printer_required" min="0" value="0"><br><br>
 
-    Modem Required:
-    <input type="number" name="modem_required" value="0"><br><br>
+        <label>Scanner Required:</label>
+        <input type="number" name="scanner_required" min="0" value="0"><br><br>
 
-    CD Required:
-    <input type="number" name="cd_required" value="0"><br><br>
+        <label>Modem Required:</label>
+        <input type="number" name="modem_required" min="0" value="0"><br><br>
 
-    <button type="submit">Submit Job</button>
+        <label>CD Drive Required:</label>
+        <input type="number" name="cd_required" min="0" value="0"><br><br>
 
-</form>
+        <button type="submit">Submit Job</button>
+    </form>
+
+    <hr>
+
+    <h2>Option 2: Upload Jobs Using CSV</h2>
+
+    <p>Upload a CSV file containing job details.</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="entry_type" value="file">
+
+        <input type="file" name="file" accept=".csv" required><br><br>
+
+        <button type="submit">Upload and Save to Database</button>
+    </form>
 
 </body>
 </html>
