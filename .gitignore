@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.o
+*.d
+/engine/host_engine
+/backend/uploads/
+.env
+.env.*
+*.Zone.Identifier
+*Zone.Identifier

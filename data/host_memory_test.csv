@@ -1,0 +1,4 @@
+arrival,priority,cpu,memory,printers,scanners,modems,cds
+0,1,2,800,0,0,0,0
+1,2,2,200,0,0,0,0
+2,3,2,1000,0,0,0,0

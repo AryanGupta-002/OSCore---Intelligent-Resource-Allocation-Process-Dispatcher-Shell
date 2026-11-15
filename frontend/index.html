@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OSCore is an operating system simulation and resource management testbed.">
+    <title>OSCore | Operating System Testbed</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- =====================================================
+         OSCORE LANDING / INTRODUCTION
+         Layout follows the supplied sketch:
+         title + subtitle, explanatory text on the left,
+         demo visual on the right, and topic navigation below.
+    ====================================================== -->
+    <main>
+        <section id="overview" class="page-section overview-section">
+            <header class="site-header">
+                <a class="brand" href="#overview" aria-label="OSCore home">
+                    <h1 class="main-title">OSCORE</h1>
+                    <p class="subtitle">
+                        Intelligent Resource &amp; Memory Allocation, Process Dispatcher Testbed
+                    </p>
+                </a>
+            </header>
+
+            <div class="intro-layout">
+                <div class="intro-copy">
+                    <p class="eyebrow">OPERATING SYSTEM SIMULATION PLATFORM</p>
+                    <h2>What is OSCore?</h2>
+                    <p class="intro-description">
+                        OSCore is an operating system simulation and resource-management
+                        testbed designed to demonstrate how processes compete for CPU time,
+                        memory and I/O devices. It brings process dispatching, scheduling,
+                        memory allocation and finite-resource management into one interactive
+                        environment. Users can load a workload, execute it through the HOST
+                        dispatcher or run individual scheduling algorithms, and observe how
+                        different policies affect process execution. The platform also
+                        records simulation results in PostgreSQL, making it possible to
+                        inspect execution history, compare performance metrics and understand
+                        the decisions made by the simulated operating system.
+                    </p>
+                    <a class="primary-link" href="#job-upload">Explore the Testbed</a>
+                </div>
+
+                <div class="intro-visual" aria-label="OSCore demonstration preview">
+                    <!-- Replace this image with a genuine OSCore screenshot when available. -->
+                    <img
+                        src="images/oscore-demo.png"
+                        alt="Preview of the OSCore process scheduling and resource management interface"
+                        class="demo-image"
+                    >
+                    <div class="visual-caption">
+                        <span class="caption-dot" aria-hidden="true"></span>
+                        OSCore Simulation Environment
+                    </div>
+                </div>
+            </div>
+
+            <nav class="explore-nav" aria-label="Explore OSCore features">
+                <span class="explore-label">Explore</span>
+                <a href="#overview" class="topic-pill">OSCore Working</a>
+                <a href="#host-dispatcher" class="topic-pill">HOST Dispatcher</a>
+                <a href="#scheduling" class="topic-pill">Scheduling Algorithms</a>
+                <a href="#machine-setup" class="topic-pill">Resource Allocation</a>
+                <a href="#machine-setup" class="topic-pill">Memory Allocation</a>
+                <a href="#analysis" class="topic-pill">Analysis</a>
+            </nav>
+        </section>
+
+        <!-- =====================================================
+             STEP 1: WORKLOAD / JOB FILE SELECTION
+        ====================================================== -->
+        <section id="job-upload" class="page-section workflow-section">
+            <div class="section-heading">
+                <p class="eyebrow">STEP 01 · WORKLOAD INPUT</p>
+                <h2>Upload a Job File</h2>
+                <p>
+                    Start with a workload containing the processes you want to simulate.
+                    Select an available CSV file or upload your own workload.
+                </p>
+            </div>
+
+            <div class="workload-layout">
+                <div class="workload-panel panel">
+                    <div class="panel-heading">
+                        <h3>Available Job Files</h3>
+                        <p>Select a previously prepared workload.</p>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="workloadSelect">Choose a workload</label>
+                        <select id="workloadSelect" name="workload" class="form-control">
+                            <option value="">Loading available CSV files...</option>
+                        </select>
+                    </div>
+
+                    <div class="file-list" id="workloadFileList" aria-live="polite">
+                        <p class="helper-text">
+                            Available CSV workloads will appear here when the backend is connected.
+                        </p>
+                    </div>
+
+                    <div class="panel-actions">
+                        <label for="csvUpload" class="secondary-button">
+                            <span aria-hidden="true">＋</span> Upload CSV
+                        </label>
+                        <input
+                            type="file"
+                            id="csvUpload"
+                            name="csvFile"
+                            accept=".csv,text/csv"
+                            class="visually-hidden"
+                        >
+                    </div>
+                </div>
+
+                <div class="workload-details">
+                    <div class="explanation-block">
+                        <p class="eyebrow">WORKLOAD FORMAT</p>
+                        <h3>What does a job file contain?</h3>
+                        <p>
+                            Each CSV row represents one process. The workload describes
+                            when a process arrives, how much CPU time it needs, its priority,
+                            memory requirement and the I/O devices it requests. OSCore uses
+                            these values to initialise the simulation and evaluate whether
+                            the selected testbed can admit and execute each process.
+                        </p>
+                    </div>
+
+                    <div class="csv-preview-card">
+                        <div class="preview-icon" aria-hidden="true">CSV</div>
+                        <div class="preview-copy">
+                            <h3>Preview CSV</h3>
+                            <p>Inspect the selected workload before starting a simulation.</p>
+                        </div>
+                        <button type="button" id="previewCsvBtn" class="outline-button" disabled>
+                            Preview CSV
+                        </button>
+                    </div>
+
+                    <div class="format-note">
+                        <strong>Expected columns</strong>
+                        <code>arrival, priority, cpu, memory, printers, scanners, modems, cds</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             STEP 2: SELECT TESTBED
+        ====================================================== -->
+        <section id="machine-setup" class="page-section workflow-section">
+            <div class="section-heading">
+                <p class="eyebrow">STEP 02 · SIMULATION CONFIGURATION</p>
+                <h2>Select Your Testbed</h2>
+                <p>
+                    Choose how OSCore should manage the workload. Use the predefined HOST
+                    environment or configure a custom machine with your own resource limits.
+                </p>
+            </div>
+
+            <div class="testbed-category">
+                <div class="category-heading">
+                    <span class="category-number">01</span>
+                    <div>
+                        <h3>Resource &amp; Memory Allocation</h3>
+                        <p>Choose the environment that will admit processes and manage resources.</p>
+                    </div>
+                </div>
+
+                <div class="choice-grid two-column">
+                    <button type="button" class="choice-card" data-testbed="host" aria-pressed="false">
+                        <span class="choice-icon" aria-hidden="true">HOST</span>
+                        <span class="choice-title">HOST</span>
+                        <span class="choice-description">
+                            Run the workload through the predefined HOST dispatcher, with
+                            four priority levels, configured memory and finite I/O devices.
+                        </span>
+                        <span class="choice-action">Select HOST <span aria-hidden="true">→</span></span>
+                    </button>
+
+                    <button type="button" class="choice-card" data-testbed="custom" aria-pressed="false">
+                        <span class="choice-icon" aria-hidden="true">CUSTOM</span>
+                        <span class="choice-title">Build Your Own Machine</span>
+                        <span class="choice-description">
+                            Configure machine memory and device capacities to explore how
+                            different resource limits affect process admission and execution.
+                        </span>
+                        <span class="choice-action">Configure Machine <span aria-hidden="true">→</span></span>
+                    </button>
+                </div>
+
+                <div id="customMachineConfig" class="configuration-panel hidden">
+                    <div class="panel-heading">
+                        <h3>Custom Machine Configuration</h3>
+                        <p>Set the resources available to this simulated machine.</p>
+                    </div>
+
+                    <div class="configuration-grid">
+                        <div class="form-field">
+                            <label for="machineMemory">Total memory (MB)</label>
+                            <input type="number" id="machineMemory" class="form-control" min="2" max="10000" value="1024">
+                        </div>
+                        <div class="form-field">
+                            <label for="machinePrinters">Printers</label>
+                            <input type="number" id="machinePrinters" class="form-control" min="0" max="10000" value="2">
+                        </div>
+                        <div class="form-field">
+                            <label for="machineScanners">Scanners</label>
+                            <input type="number" id="machineScanners" class="form-control" min="0" max="10000" value="1">
+                        </div>
+                        <div class="form-field">
+                            <label for="machineModems">Modems</label>
+                            <input type="number" id="machineModems" class="form-control" min="0" max="10000" value="1">
+                        </div>
+                        <div class="form-field">
+                            <label for="machineCds">CD drives</label>
+                            <input type="number" id="machineCds" class="form-control" min="0" max="10000" value="2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testbed-category" id="scheduling">
+                <div class="category-heading">
+                    <span class="category-number">02</span>
+                    <div>
+                        <h3>Scheduling Algorithms</h3>
+                        <p>Select an algorithm to execute the same workload and compare its behaviour.</p>
+                    </div>
+                </div>
+
+                <div class="choice-grid algorithm-grid standard-algorithm-grid">
+                    <button type="button" class="algorithm-card" data-algorithm="FCFS" aria-pressed="false">
+                        <span class="algorithm-acronym">FCFS</span>
+                        <span class="algorithm-name">First Come, First Served</span>
+                    </button>
+                    <button type="button" class="algorithm-card" data-algorithm="SJF" aria-pressed="false">
+                        <span class="algorithm-acronym">SJF</span>
+                        <span class="algorithm-name">Shortest Job First</span>
+                    </button>
+                    <button type="button" class="algorithm-card" data-algorithm="SRTF" aria-pressed="false">
+                        <span class="algorithm-acronym">SRTF</span>
+                        <span class="algorithm-name">Shortest Remaining Time First</span>
+                    </button>
+                    <button type="button" class="algorithm-card" data-algorithm="PRIORITY" aria-pressed="false">
+                        <span class="algorithm-acronym">PRIORITY</span>
+                        <span class="algorithm-name">Priority Scheduling</span>
+                    </button>
+                    <button type="button" class="algorithm-card" data-algorithm="RR" aria-pressed="false">
+                        <span class="algorithm-acronym">RR</span>
+                        <span class="algorithm-name">Round Robin</span>
+                    </button>
+                    <button type="button" class="algorithm-card" data-algorithm="MLFQ" aria-pressed="false">
+                        <span class="algorithm-acronym">MLFQ</span>
+                        <span class="algorithm-name">Multilevel Feedback Queue</span>
+                    </button>
+                </div>
+
+                <div id="rrQuantumPanel" class="configuration-panel quantum-panel hidden">
+                    <div class="form-field">
+                        <label for="rrTimeQuantum">Round Robin time quantum</label>
+                        <input type="number" id="rrTimeQuantum" class="form-control" min="1" step="1" value="2">
+                        <p class="helper-text">Enter a positive integer time quantum for this Round Robin run.</p>
+                    </div>
+                </div>
+
+                <button type="button" id="runAllStandardBtn" class="outline-button batch-run-button">
+                    Run all 6 standard algorithms
+                </button>
+
+                <div class="algorithm-note">
+                    <strong>Execution rule:</strong> Select HOST, Custom Machine, one standard algorithm,
+                    or run all six standard algorithms. Only one execution mode can be active at a time.
+                </div>
+            </div>
+
+            <div class="workflow-footer">
+                <p id="selectionSummary" class="helper-text">
+                    Select a workload, testbed and scheduling option to continue.
+                </p>
+                <button type="button" id="continueToAnalysisBtn" class="primary-button" disabled>
+                    Continue to Simulation <span aria-hidden="true">→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             STEP 3: ANALYSIS / RESULTS PLACEHOLDER
+             This section will be connected to the C engine and
+             Flask API in the JavaScript integration step.
+        ====================================================== -->
+        <section id="analysis" class="page-section workflow-section">
+            <div class="section-heading">
+                <p class="eyebrow">STEP 03 · RESULTS &amp; INSIGHTS</p>
+                <h2>Simulation Analysis</h2>
+                <p>
+                    Review process execution, scheduling behaviour, resource allocation
+                    and performance metrics after a simulation has been run.
+                </p>
+            </div>
+
+            <div class="analysis-preview-grid">
+                <a class="analysis-preview-card" href="#executionTimelinePanel">
+                    <span class="preview-number">01</span>
+                    <h3>Execution Timeline</h3>
+                    <p>Jump to the process execution timeline.</p>
+                </a>
+                <a class="analysis-preview-card" href="#performancePanel">
+                    <span class="preview-number">02</span>
+                    <h3>Performance Metrics</h3>
+                    <p>Inspect waiting time, turnaround time, completion time and CPU utilisation.</p>
+                </a>
+                <a class="analysis-preview-card" href="#resourcePanel">
+                    <span class="preview-number">03</span>
+                    <h3>Resource Analysis</h3>
+                    <p>Explore memory allocation, device availability, accepted jobs and rejected jobs.</p>
+                </a>
+                <a class="analysis-preview-card" href="#processResultsPanel">
+                    <span class="preview-number">04</span>
+                    <h3>Algorithm Comparison</h3>
+                    <p>Compare scheduling policies using the same workload and measured results.</p>
+                </a>
+            </div>
+            <p class="analysis-intro-note">
+                After execution, OSCore displays returned metrics, process results, charts and saved run history.
+                Batch runs are compared using the actual data returned by the simulation backend.
+            </p>
+        </section>
+    </main>
+
+    <!-- CSV preview dialog. JavaScript will populate its content. -->
+    <dialog id="csvPreviewDialog" class="modal-dialog">
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">WORKLOAD INSPECTION</p>
+                <h2>CSV Preview</h2>
+            </div>
+            <button type="button" id="closeCsvPreviewBtn" class="icon-button" aria-label="Close CSV preview">
+                ×
+            </button>
+        </div>
+        <div id="csvPreviewContent" class="csv-preview-content">
+            <p class="helper-text">Select a CSV workload to preview its contents.</p>
+        </div>
+    </dialog>
+
+    <script src="script.js"></script>
+</body>
+</html>
