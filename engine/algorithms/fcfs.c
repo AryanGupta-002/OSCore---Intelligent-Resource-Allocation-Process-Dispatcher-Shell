@@ -1,5 +1,5 @@
 
-// CODE BY AGRIMA
+// CODE BY AGRIMA of FCFS
 
 #include <stdlib.h>
 #include "../include/scheduler.h"
