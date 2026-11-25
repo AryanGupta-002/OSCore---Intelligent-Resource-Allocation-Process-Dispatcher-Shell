@@ -1,21 +1,17 @@
-
-// CODE BY AGRIMA of FCFS
+// CODE BY AGRIMA
 
 #include <stdlib.h>
 #include "../include/scheduler.h"
 #include "../include/execution_trace.h"
 
-int schedule_fcfs(
-    Process processes[],
-    int process_count
-)
+int schedule_fcfs(Process processes[],int process_count)
 {
 
     if (processes == NULL || process_count <= 0) {
         return 0;
     }
 
-    // array of indices, cause i wanted to preserve input order
+    // stores indices, cause i wanted to preserve input order
     int *order = malloc(
         (size_t)process_count * sizeof(int)
     );
@@ -34,7 +30,7 @@ int schedule_fcfs(
 
         order[i] = i;
 
-        // metics wali sari values ko zero kardiya taki koi galat sa result store nah ho
+        // metrics wali sari values ko zero kardiya taki koi galat result store nah ho
         processes[i].remaining_time =
             processes[i].burst_time;
 
@@ -49,8 +45,6 @@ int schedule_fcfs(
 
     /*
      FCFS mai Sort indices by arrival time.
-     aur Equal arrival times mai retain original wala order.
-     aur Process array itself is not rearranged.
      */
     for (int i = 0; i < process_count - 1; i++) {
         for (int j = i + 1; j < process_count; j++) {
