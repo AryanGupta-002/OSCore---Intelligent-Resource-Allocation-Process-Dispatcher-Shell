@@ -7,8 +7,7 @@ static size_t segment_capacity;
 // Purane trace ko reset krne ke liye count zero kr do
 // Memory free nhi hogi, reuse ho sakti h
 void execution_trace_reset(void)
-{
-    segment_count = 0;
+{ segment_count = 0;
 }
 int execution_trace_record(int pid, int start_time, int end_time)
 { // PID aur execution timing valid honi chahiye
