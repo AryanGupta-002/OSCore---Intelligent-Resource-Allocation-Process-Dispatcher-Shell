@@ -1,14 +1,11 @@
 
-// CODE BY AGRIMA of SJF
+// CODE BY AGRIMA
 
 #include <stdlib.h>
 #include "../include/scheduler.h"
 #include "../include/execution_trace.h"
 
-int schedule_sjf(
-    Process processes[],
-    int process_count
-)
+int schedule_sjf(Process processes[],int process_count)
 {
 
     if (processes == NULL || process_count <= 0) {
