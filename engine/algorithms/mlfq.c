@@ -2,91 +2,75 @@
 #include <stdlib.h>
 #include "../include/scheduler.h"
 #include "../include/execution_trace.h"
-
-/*
- * Multilevel Feedback Queue (MLFQ)
- *
- * Three feedback queues:
- * Q0 - Highest priority - Time quantum: 2
- * Q1 - Medium priority - Time quantum: 4
- * Q2 - Lowest priority  - Time quantum: 8
- *
- * Rules:
- * 1. Every new process enters Q0.
- * 2. Each queue uses Round Robin scheduling.
- * 3. An unfinished process is demoted after using
- *    its complete time quantum.
- * 4. A process in a higher-priority queue can
- *    preempt a process running in a lower queue.
- * 5. A preempted process retains its remaining
- *    quantum in its current queue.
- */
-
+// MLFQ mai 3 queues hoti hain... Q0, Q1 aur Q2
+// Naya process Q0 mai aata h
+// Quantum khatam hone par process next queue mai chala jata h
+// Upar wali queue mai process aaya to current process ko rok denge
 #define MLFQ_LEVELS 3
-
+// Har queue ka quantum alag h...
+// Q0 = 2, Q1 = 4, Q2 = 8
 static const int mlfq_quantum[MLFQ_LEVELS] = {
     2, 4, 8
 };
-
-
-/* Queue structure using process indices. */
+// Queue ka front aur rear store karne ke liye
 typedef struct {
     int front;
     int rear;
 } MLFQQueue;
-
-
-/* Add a process at the rear of a queue. */
+// Process ko queue ke last mai add krne ke liye
 static void enqueue(
     MLFQQueue *queue,
     int next[],
     int process_index
-) {
-    next[process_index] = -1;
-
+) { next[process_index] = -1;
+    // Queue khali h to ye process hi front aur rear dono hoga
     if (queue->rear == -1) {
         queue->front = process_index;
         queue->rear = process_index;
-    } else {
+    }
+    else {
+        // Purane last process ke baad naye process ko jod do
         next[queue->rear] = process_index;
         queue->rear = process_index;
     }
 }
 
 
-/* Add a preempted process at the front. */
+// Process ko queue ke starting mai add krne ke liye
+// Preemption hone par process ko wapis front mai rakhenge
 static void enqueue_front(
     MLFQQueue *queue,
     int next[],
     int process_index
-) {
+)
+{
     if (queue->front == -1) {
         next[process_index] = -1;
         queue->front = process_index;
         queue->rear = process_index;
-    } else {
+    }
+    else {
+        // Naya process ab sabse aage aa jayega
         next[process_index] = queue->front;
         queue->front = process_index;
     }
 }
 
 
-/* Remove and return the front process. */
-static int dequeue(
-    MLFQQueue *queue,
-    int next[]
-) {
-    if (queue->front == -1) {
-        return -1;
-    }
+// Queue ke front se process nikalne ke liye
+static int dequeue(MLFQQueue *queue, int next[])
+{
+    if (queue->front == -1)
+        return -1;  // Queue khali h to -1 return hoga
 
     int process_index = queue->front;
 
+    // Front ko next process par shift kr diya
     queue->front = next[process_index];
 
-    if (queue->front == -1) {
+    // Agar queue mai ab koi nhi bacha to rear bhi reset hoga
+    if (queue->front == -1)
         queue->rear = -1;
-    }
 
     next[process_index] = -1;
 
@@ -94,36 +78,37 @@ static int dequeue(
 }
 
 
-/* Check whether a queue contains a process. */
-static int is_empty(MLFQQueue *queue) {
+// Check krna h ki queue khali h ya nhi
+static int is_empty(MLFQQueue *queue)
+{
     return queue->front == -1;
 }
 
 
-/* Return the highest-priority non-empty queue. */
-static int highest_ready_queue(MLFQQueue queues[]) {
-
-    for (int level = 0; level < MLFQ_LEVELS; level++) {
-
+// Highest priority wali ready queue find karne ke liye
+// Q0 ki priority sabse high h, isliye pehle wahi check hogi
+static int highest_ready_queue(MLFQQueue queues[])
+{ for (int level = 0; level < MLFQ_LEVELS; level++) {
         if (!is_empty(&queues[level])) {
             return level;
         }
     }
-
-    return -1;
+    return -1;  // Koi bhi queue ready nhi h
 }
 
-
-/* Main MLFQ scheduling function. */
+// Main MLFQ scheduling function
 int schedule_mlfq(
     Process processes[],
     int process_count
 ) {
-
-    if (processes == NULL || process_count <= 0) {
+    // Input galat h to function yahin se return kar dega
+    if (processes == NULL || process_count <= 0)
         return 0;
-    }
 
+    // 3 arrays banaye hain...
+    // next = queue mai next process ka index
+    // queue_level = process abhi kis queue mai h
+    // quantum_used = process kitna quantum use kar chuka h
     int *next = malloc(
         (size_t)process_count * sizeof(int)
     );
@@ -132,51 +117,52 @@ int schedule_mlfq(
         (size_t)process_count * sizeof(int)
     );
 
+    // calloc sab values starting mai 0 kar deta h
     int *quantum_used = calloc(
         (size_t)process_count,
         sizeof(int)
     );
 
-    if (next == NULL ||
-        queue_level == NULL ||
+
+    // Memory allocate nhi hui to jo memory mili h use free kr do
+    if (next == NULL || queue_level == NULL ||
         quantum_used == NULL) {
 
         free(next);
         free(queue_level);
         free(quantum_used);
-
         return 0;
     }
 
-
     MLFQQueue queues[MLFQ_LEVELS];
-
+    // Starting mai teeno queues khali hain
     for (int level = 0; level < MLFQ_LEVELS; level++) {
         queues[level].front = -1;
         queues[level].rear = -1;
     }
 
-
-    /* Validate and reset all processes. */
+    // Ab sabhi processes ki initial values set krni hain
     for (int i = 0; i < process_count; i++) {
 
+        // Negative arrival aur 0 burst time valid nhi h
         if (processes[i].arrival_time < 0 ||
             processes[i].burst_time <= 0) {
-
             free(next);
             free(queue_level);
             free(quantum_used);
-
             return 0;
         }
 
-        processes[i].remaining_time =
-            processes[i].burst_time;
+        // Starting mai remaining time burst time ke equal hoga
+        processes[i].remaining_time = processes[i].burst_time;
 
+        // Saari timing values ko reset kr diya
         processes[i].completion_time = 0;
         processes[i].turnaround_time = 0;
         processes[i].waiting_time = 0;
         processes[i].response_time = 0;
+
+        // -1 ka matlab abhi tak CPU nhi mila
         processes[i].first_start_time = -1;
 
         processes[i].state = PROCESS_NEW;
@@ -187,223 +173,158 @@ int schedule_mlfq(
     }
 
 
-    int time = 0;
-    int finished = 0;
+    int time = 0;       // Current time
+    int finished = 0;   // Kitne processes complete hue
 
+    // -1 ka matlab abhi CPU khali h
     int current_process = -1;
     int current_level = -1;
 
 
+    // Jab tak saare processes complete nhi hote loop chalega
     while (finished < process_count) {
 
-        /*
-         * STEP 1:
-         * Add all newly arrived processes to Q0.
-         */
+        // Pehle check kro kaunse processes ka arrival time aa gaya h
         for (int i = 0; i < process_count; i++) {
 
             if (processes[i].state == PROCESS_NEW &&
                 processes[i].arrival_time <= time) {
 
+                // Har naya process Q0 se start karega
                 queue_level[i] = 0;
                 quantum_used[i] = 0;
-
                 processes[i].state = PROCESS_READY;
 
-                enqueue(
-                    &queues[0],
-                    next,
-                    i
-                );
+                enqueue(&queues[0], next, i);
             }
         }
 
 
-        /*
-         * STEP 2:
-         * Preempt the current process if a higher
-         * priority queue has become non-empty.
-         */
+        // Ab check karenge ki higher priority queue mai koi process h ya nhi
         if (current_process != -1) {
-
             int higher_queue_ready = 0;
-
-            for (int level = 0;
-                 level < current_level;
-                 level++) {
-
+            // Current queue se upar wali queues hi check karni hain
+            for (int level = 0; level < current_level; level++) {
                 if (!is_empty(&queues[level])) {
                     higher_queue_ready = 1;
                     break;
                 }
             }
-
             if (higher_queue_ready) {
-
-                processes[current_process].state =
-                    PROCESS_READY;
-
-                /*
-                 * Preserve its remaining quantum.
-                 * Put it at the front of its queue.
-                 */
+                // Current process ko filhaal rok denge
+                processes[current_process].state = PROCESS_READY;
+                // Iska bacha hua quantum save rahega...
+                // Isliye same queue ke front mai wapis bhejenge
                 enqueue_front(
                     &queues[current_level],
                     next,
                     current_process
                 );
-
                 current_process = -1;
                 current_level = -1;
             }
         }
-
-
-        /*
-         * STEP 3:
-         * If CPU is free, select from the highest
-         * priority non-empty queue.
-         */
+        // Agar CPU khali h to ab next process select karna h
         if (current_process == -1) {
 
-            int selected_level =
-                highest_ready_queue(queues);
-
-            /*
-             * No ready process: jump to the next arrival.
-             */
+            // Sabse high priority wali non-empty queue find kro
+            int selected_level = highest_ready_queue(queues);
             if (selected_level == -1) {
-
+                // Koi process ready nhi h... CPU idle rahega
+                // Ab dekhna h next process kab aayega
                 int next_arrival = -1;
-
                 for (int i = 0; i < process_count; i++) {
-
                     if (processes[i].state == PROCESS_NEW) {
-
+                        // Sabse jaldi aane wale process ko find karenge
                         if (next_arrival == -1 ||
                             processes[i].arrival_time <
                             processes[next_arrival].arrival_time) {
-
                             next_arrival = i;
                         }
-                    }
-                }
+                    } }
 
-                if (next_arrival == -1) {
+                // Koi process bacha hi nhi to loop end
+                if (next_arrival == -1)
                     break;
-                }
-
+                // Seedha next process ke arrival time par chale jao
                 time = processes[next_arrival].arrival_time;
 
                 continue;
             }
 
+            // Selected queue ke front se process nikal lo
             current_process = dequeue(
                 &queues[selected_level],
                 next
             );
-
             current_level = selected_level;
-
-            processes[current_process].state =
-                PROCESS_RUNNING;
-
+            processes[current_process].state = PROCESS_RUNNING;
+            // Pehli baar CPU mila h to starting time save kr lo
             if (processes[current_process].first_start_time == -1) {
-
-                processes[current_process].first_start_time =
-                    time;
+                processes[current_process].first_start_time = time;
             }
         }
 
 
-        /*
-         * STEP 4:
-         * Execute the selected process for one time unit.
-         */
+        // Ab selected process ko 1 time unit ke liye chalayenge
         Process *p = &processes[current_process];
 
         p->state = PROCESS_RUNNING;
-
         p->remaining_time--;
-
         quantum_used[current_process]++;
 
+        // Gantt chart mai process ka execution record save hoga
         if (!execution_trace_record(p->pid, time, time + 1)) {
             free(next);
             free(queue_level);
             free(quantum_used);
             return 0;
         }
+
         time++;
 
-
-        /*
-         * STEP 5:
-         * Check whether the process has completed.
-         */
+        // Agar remaining time 0 ho gaya to process complete h
         if (p->remaining_time == 0) {
-
             p->completion_time = time;
-
             p->state = PROCESS_COMPLETED;
-
+            // Completion ke baad TAT, WT aur RT calculate honge
             calculate_process_metrics(p);
-
             finished++;
-
             current_process = -1;
             current_level = -1;
-
             continue;
         }
 
-
-        /*
-         * STEP 6:
-         * Check whether its time quantum has expired.
-         */
+        // Quantum khatam ho gaya but process ka kaam abhi baaki h
         if (quantum_used[current_process] >=
             mlfq_quantum[current_level]) {
 
             p->state = PROCESS_READY;
 
+            // Next turn mai fresh quantum milega
             quantum_used[current_process] = 0;
 
-            /*
-             * Demote the unfinished process.
-             * Q2 is the lowest queue, so it remains
-             * in Q2 after using its quantum.
-             */
-            if (current_level < MLFQ_LEVELS - 1) {
-
-                queue_level[current_process] =
-                    current_level + 1;
+            // Q0 se Q1 aur Q1 se Q2 mai bhej denge
+            // Q2 last queue h... isliye process wahi rahega
+            if (current_level < MLFQ_LEVELS - 1) 
+            {queue_level[current_process] = current_level + 1;
             }
-
-            int destination =
-                queue_level[current_process];
-
+            int destination = queue_level[current_process];
+            // Ab process ko next queue ke last mai add kr do
             enqueue(
                 &queues[destination],
                 next,
                 current_process
             );
-
             current_process = -1;
             current_level = -1;
         }
 
-        /*
-         * Otherwise, the process keeps the CPU.
-         * The next loop checks for new arrivals and
-         * higher-priority preemption.
-         */
+        // Agar quantum bacha h to same process CPU par continue karega
     }
-
-
+    // Saara kaam hone ke baad allocated memory free kr denge
     free(next);
     free(queue_level);
     free(quantum_used);
-
     return finished == process_count;
 }
